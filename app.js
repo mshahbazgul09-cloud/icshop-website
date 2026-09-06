@@ -273,7 +273,7 @@ function checkout() {
 // Admin Panel Functions
 function openAdmin() {
     const password = prompt('Enter admin password:');
-    if (password === 'admin123') {
+    if (password === 'shahhbaz0786') {
         document.getElementById('admin-modal').style.display = 'block';
         displayAdminProducts();
         loadOrdersFromStorage();
