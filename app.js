@@ -4,7 +4,7 @@ let products = [
         id: 1,
         name: 'Vanilla Classic',
         category: 'vanilla',
-        price: 4.99,
+        price: 500,
         description: 'Smooth and creamy vanilla ice cream',
         image: 'https://via.placeholder.com/300x250/FFD700/000000?text=Vanilla+Classic'
     },
@@ -12,7 +12,7 @@ let products = [
         id: 2,
         name: 'Chocolate Dream',
         category: 'chocolate',
-        price: 5.49,
+        price: 550,
         description: 'Rich and delicious chocolate ice cream',
         image: 'https://via.placeholder.com/300x250/8B4513/FFFFFF?text=Chocolate+Dream'
     },
@@ -20,7 +20,7 @@ let products = [
         id: 3,
         name: 'Strawberry Bliss',
         category: 'strawberry',
-        price: 5.49,
+        price: 550,
         description: 'Fresh strawberry flavored ice cream',
         image: 'https://via.placeholder.com/300x250/FF69B4/FFFFFF?text=Strawberry+Bliss'
     },
@@ -28,7 +28,7 @@ let products = [
         id: 4,
         name: 'Mint Chocolate Chip',
         category: 'special',
-        price: 5.99,
+        price: 600,
         description: 'Refreshing mint with chocolate chips',
         image: 'https://via.placeholder.com/300x250/98FF98/000000?text=Mint+Chip'
     },
@@ -36,7 +36,7 @@ let products = [
         id: 5,
         name: 'Cookies & Cream',
         category: 'special',
-        price: 5.99,
+        price: 600,
         description: 'Vanilla ice cream with cookie pieces',
         image: 'https://via.placeholder.com/300x250/D3D3D3/000000?text=Cookies+Cream'
     },
@@ -44,7 +44,7 @@ let products = [
         id: 6,
         name: 'Caramel Swirl',
         category: 'special',
-        price: 5.99,
+        price: 600,
         description: 'Vanilla ice cream with caramel ribbons',
         image: 'https://via.placeholder.com/300x250/CD853F/FFFFFF?text=Caramel+Swirl'
     }
@@ -53,6 +53,7 @@ let products = [
 let cart = [];
 let orders = [];
 let currentFilter = 'all';
+const CURRENCY = '₨'; // PKR Currency Symbol
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -87,7 +88,7 @@ function createProductCard(product) {
             <div class="product-category">${product.category}</div>
             <h3 class="product-name">${product.name}</h3>
             <p class="product-description">${product.description}</p>
-            <div class="product-price">$${product.price.toFixed(2)}</div>
+            <div class="product-price">${CURRENCY}${product.price}</div>
             <div class="product-actions">
                 <button class="btn btn-primary" onclick="addToCart(${product.id})">Add to Cart</button>
             </div>
@@ -147,7 +148,7 @@ function displayCartItems() {
     
     if (cart.length === 0) {
         cartContainer.innerHTML = '<p style="text-align: center; color: #999;">Your cart is empty</p>';
-        document.getElementById('cart-total').textContent = '0.00';
+        document.getElementById('cart-total').textContent = '0';
         return;
     }
     
@@ -161,20 +162,20 @@ function displayCartItems() {
         cartItem.innerHTML = `
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">$${item.price.toFixed(2)} each</div>
+                <div class="cart-item-price">${CURRENCY}${item.price} each</div>
                 <div class="cart-item-quantity">
                     <button class="btn" onclick="decreaseQuantity(${index})" style="padding: 0.2rem 0.5rem;">-</button>
                     <input type="number" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)" min="1">
                     <button class="btn" onclick="increaseQuantity(${index})" style="padding: 0.2rem 0.5rem;">+</button>
                 </div>
-                <div style="margin-top: 0.5rem; font-weight: bold;">Subtotal: $${itemTotal.toFixed(2)}</div>
+                <div style="margin-top: 0.5rem; font-weight: bold;">Subtotal: ${CURRENCY}${itemTotal}</div>
             </div>
             <button class="btn btn-danger" onclick="removeFromCart(${index})">Remove</button>
         `;
         cartContainer.appendChild(cartItem);
     });
     
-    document.getElementById('cart-total').textContent = total.toFixed(2);
+    document.getElementById('cart-total').textContent = total;
 }
 
 // Increase quantity
@@ -263,7 +264,7 @@ function checkout() {
     orders.push(order);
     saveOrdersToStorage();
     
-    alert(`Order placed successfully!\nOrder ID: ${order.id}\nTotal: $${total.toFixed(2)}`);
+    alert(`Order placed successfully!\nOrder ID: ${order.id}\nTotal: ${CURRENCY}${total}`);
     cart = [];
     saveCartToStorage();
     updateCartCount();
@@ -317,7 +318,7 @@ function displayAdminProducts() {
         item.innerHTML = `
             <h4>${product.name}</h4>
             <p><strong>Category:</strong> ${product.category}</p>
-            <p><strong>Price:</strong> $${product.price.toFixed(2)}</p>
+            <p><strong>Price:</strong> ${CURRENCY}${product.price}</p>
             <p><strong>Description:</strong> ${product.description}</p>
             <div class="admin-product-actions">
                 <button class="btn btn-warning" onclick="editProduct(${index})">Edit</button>
@@ -334,7 +335,7 @@ function addProduct(event) {
     
     const name = document.getElementById('product-name').value;
     const category = document.getElementById('product-category').value;
-    const price = parseFloat(document.getElementById('product-price').value);
+    const price = parseInt(document.getElementById('product-price').value);
     const description = document.getElementById('product-description').value;
     const image = document.getElementById('product-image').value;
     
@@ -365,10 +366,10 @@ function addProduct(event) {
 // Edit product
 function editProduct(index) {
     const product = products[index];
-    const newPrice = prompt(`Edit price for ${product.name}:\n(Current: $${product.price.toFixed(2)})`, product.price);
+    const newPrice = prompt(`Edit price for ${product.name}:\n(Current: ${CURRENCY}${product.price})`, product.price);
     
     if (newPrice !== null && newPrice !== '') {
-        const price = parseFloat(newPrice);
+        const price = parseInt(newPrice);
         if (!isNaN(price) && price > 0) {
             products[index].price = price;
             saveProductsToStorage();
@@ -409,7 +410,7 @@ function displayAdminOrders() {
             <h4>Order ID: ${order.id}</h4>
             <p><strong>Date:</strong> ${order.date}</p>
             <p><strong>Items:</strong> ${itemsList}</p>
-            <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
+            <p><strong>Total:</strong> ${CURRENCY}${order.total}</p>
             <p><strong>Status:</strong> 
                 <select onchange="updateOrderStatus(${index}, this.value)">
                     <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
