@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICShop - Premium Ice Cream Store</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">🍦 ICShop</div>
+            <div class="nav-menu">
+                <a href="#home" onclick="navigateTo('home')">Home</a>
+                <a href="#menu" onclick="navigateTo('menu')">Menu</a>
+                <a href="#about" onclick="navigateTo('about')">About</a>
+                <a href="#contact" onclick="navigateTo('contact')">Contact</a>
+                <div class="nav-buttons">
+                    <a href="#" onclick="openWishlist()" class="nav-icon-btn">❤️ Wishlist</a>
+                    <a href="#" onclick="openCart()" class="cart-btn">🛒 Cart <span id="cart-count">0</span></a>
+                    <span id="user-menu">
+                        <a href="#" onclick="showAuthModal()" class="nav-icon-btn">👤 Login</a>
+                    </span>
+                    <a href="#" onclick="openAdmin()" class="admin-btn" style="display:none;" id="admin-btn">⚙️ Admin</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Promotional Banner -->
+    <div class="promo-banner" id="promo-banner">
+        <p>🎉 Special Offer: Use code <strong>WELCOME10</strong> for 10% off your first order!</p>
+    </div>
+
+    <!-- Home Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Welcome to ICShop</h1>
+            <p>Premium Ice Cream & Frozen Treats</p>
+            <button class="btn btn-primary" onclick="navigateTo('menu')">Explore Menu</button>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <h2>Our Menu</h2>
+            
+            <!-- Search and Filters -->
+            <div class="search-filters">
+                <input type="text" id="search-input" placeholder="Search ice creams..." onkeyup="filterProducts()">
+                <div class="filter-group">
+                    <select id="category-filter" onchange="filterProducts()">
+                        <option value="">All Categories</option>
+                        <option value="vanilla">Vanilla</option>
+                        <option value="chocolate">Chocolate</option>
+                        <option value="strawberry">Strawberry</option>
+                        <option value="special">Special</option>
+                    </select>
+                    <select id="price-filter" onchange="filterProducts()">
+                        <option value="">All Prices</option>
+                        <option value="0-3">Under $3</option>
+                        <option value="3-5">$3 - $5</option>
+                        <option value="5-7">$5 - $7</option>
+                        <option value="7-100">$7+</option>
+                    </select>
+                    <select id="sort-filter" onchange="filterProducts()">
+                        <option value="">Sort By</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="newest">Newest</option>
+                        <option value="rating">Top Rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterProducts('all')">All</button>
+                <button class="filter-btn" onclick="filterProducts('featured')">Featured</button>
+                <button class="filter-btn" onclick="filterProducts('bestseller')">Best Sellers</button>
+                <button class="filter-btn" onclick="filterProducts('new-arrival')">New Arrivals</button>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2>About ICShop</h2>
+            <p>ICShop is a premium ice cream shop dedicated to serving the finest quality ice cream made with natural ingredients. We pride ourselves on creating unique flavors and providing exceptional customer service.</p>
+            <div class="features">
+                <div class="feature">
+                    <h3>🥄 Premium Quality</h3>
+                    <p>Made with natural ingredients and no artificial flavors</p>
+                </div>
+                <div class="feature">
+                    <h3>🚚 Fast Delivery</h3>
+                    <p>Quick and reliable delivery to your doorstep</p>
+                </div>
+                <div class="feature">
+                    <h3>💳 Easy Payment</h3>
+                    <p>Multiple payment options for your convenience</p>
+                </div>
+                <div class="feature">
+                    <h3>💬 24/7 Support</h3>
+                    <p>Live chat with our support team anytime</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <div class="contact-info">
+                <p><strong>📱 Phone:</strong> +923286324052</p>
+                <p><strong>📧 Email:</strong> gullsafs@gmail.com</p>
+                <p><strong>📍 Address:</strong> Ghazi or DHA road PCHS 1-F2</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAuthModal()">&times;</span>
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab-btn" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <!-- Login Tab -->
+            <div id="login-tab" class="auth-tab-content active">
+                <h2>Customer Login</h2>
+                <form onsubmit="customerLogin(event)">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+
+            <!-- Register Tab -->
+            <div id="register-tab" class="auth-tab-content">
+                <h2>Create Account</h2>
+                <form onsubmit="customerRegister(event)">
+                    <div class="form-group">
+                        <label>Full Name:</label>
+                        <input type="text" id="register-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone:</label>
+                        <input type="tel" id="register-phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Modal -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content product-detail">
+            <span class="close" onclick="closeProductModal()">&times;</span>
+            <div class="product-detail-container">
+                <div class="product-detail-images">
+                    <img id="detail-main-image" src="" alt="Product">
+                    <div class="product-detail-thumbnails" id="product-thumbnails"></div>
+                </div>
+                <div class="product-detail-info">
+                    <h2 id="detail-product-name"></h2>
+                    <div class="product-rating">
+                        <span id="detail-rating">⭐ 4.5</span>
+                        <span id="detail-reviews-count">(0 reviews)</span>
+                    </div>
+                    <p id="detail-description"></p>
+                    <div class="product-detail-price">
+                        <h3 id="detail-price"></h3>
+                        <p id="detail-stock"></p>
+                    </div>
+                    <div class="product-detail-actions">
+                        <div class="quantity-selector">
+                            <button onclick="decreaseDetailQuantity()">-</button>
+                            <input type="number" id="detail-quantity" value="1" min="1">
+                            <button onclick="increaseDetailQuantity()">+</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="addDetailToCart()">Add to Cart</button>
+                        <button class="btn btn-secondary" onclick="addToWishlist()">❤️ Wishlist</button>
+                    </div>
+                    
+                    <!-- Reviews Section -->
+                    <div class="reviews-section">
+                        <h4>Customer Reviews</h4>
+                        <div id="product-reviews"></div>
+                        <div class="add-review">
+                            <h5>Add Your Review</h5>
+                            <div class="form-group">
+                                <label>Rating:</label>
+                                <select id="review-rating">
+                                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                    <option value="4">⭐⭐⭐⭐ Good</option>
+                                    <option value="3">⭐⭐⭐ Average</option>
+                                    <option value="2">⭐⭐ Poor</option>
+                                    <option value="1">⭐ Terrible</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Comment:</label>
+                                <textarea id="review-comment" placeholder="Share your experience..."></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+                        </div>
+                    </div>
+
+                    <!-- Related Products -->
+                    <div class="related-products">
+                        <h4>Related Products</h4>
+                        <div id="related-products-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCart()">&times;</span>
+            <h2>Shopping Cart</h2>
+            <div id="cart-items"></div>
+            <div class="coupon-section">
+                <input type="text" id="coupon-code" placeholder="Enter coupon code">
+                <button class="btn btn-secondary" onclick="applyCoupon()">Apply</button>
+            </div>
+            <div class="cart-summary">
+                <p>Subtotal: $<span id="cart-subtotal">0.00</span></p>
+                <p>Discount: -$<span id="cart-discount">0.00</span></p>
+                <h3>Total: $<span id="cart-total">0.00</span></h3>
+            </div>
+            <button class="btn btn-primary" onclick="checkout()">Proceed to Checkout</button>
+            <button class="btn btn-secondary" onclick="closeCart()">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCheckout()">&times;</span>
+            <h2>Checkout</h2>
+            <form onsubmit="placeOrder(event)">
+                <div class="form-group">
+                    <label>Full Name:</label>
+                    <input type="text" id="checkout-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="checkout-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number:</label>
+                    <input type="tel" id="checkout-phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Complete Address:</label>
+                    <input type="text" id="checkout-address" required>
+                </div>
+                <div class="form-group">
+                    <label>City:</label>
+                    <input type="text" id="checkout-city" required>
+                </div>
+                <div class="form-group">
+                    <label>Delivery Notes (Optional):</label>
+                    <textarea id="checkout-notes" placeholder="Special instructions for delivery..."></textarea>
+                </div>
+                <div class="order-summary">
+                    <h4>Order Summary</h4>
+                    <div id="checkout-items"></div>
+                    <h3>Total: $<span id="checkout-total">0.00</span></h3>
+                </div>
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wishlist Modal -->
+    <div id="wishlist-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWishlist()">&times;</span>
+            <h2>My Wishlist</h2>
+            <div id="wishlist-items"></div>
+        </div>
+    </div>
+
+    <!-- Order Tracking Modal -->
+    <div id="tracking-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTracking()">&times;</span>
+            <h2>Order Tracking</h2>
+            <div id="tracking-content"></div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content admin-panel">
+            <span class="close" onclick="closeAdmin()">&times;</span>
+            <h2>Admin Panel</h2>
+            
+            <div class="admin-login" id="admin-login">
+                <h3>Admin Access</h3>
+                <form onsubmit="adminLogin(event)">
+                    <div class="form-group">
+                        <label>Admin Email:</label>
+                        <input type="email" id="admin-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="admin-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+
+            <div class="admin-dashboard" id="admin-dashboard" style="display:none;">
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchAdminTab('dashboard')">Dashboard</button>
+                    <button class="tab-btn" onclick="switchAdminTab('products')">Products</button>
+                    <button class="tab-btn" onclick="switchAdminTab('addproduct')">Add Product</button>
+                    <button class="tab-btn" onclick="switchAdminTab('orders')">Orders</button>
+                    <button class="tab-btn" onclick="switchAdminTab('chat')">Chat</button>
+                    <button class="tab-btn" onclick="switchAdminTab('coupons')">Coupons</button>
+                    <button class="tab-btn" onclick="switchAdminTab('reports')">Reports</button>
+                    <button class="logout-btn" onclick="adminLogout()">Logout</button>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="admin-tab-content active">
+                    <h3>Dashboard Statistics</h3>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h4>Total Orders</h4>
+                            <p class="stat-number" id="stat-orders">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Revenue</h4>
+                            <p class="stat-number">$<span id="stat-revenue">0</span></p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Customers</h4>
+                            <p class="stat-number" id="stat-customers">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Best Sellers</h4>
+                            <div id="stat-bestsellers"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Tab -->
+                <div id="products-tab" class="admin-tab-content">
+                    <h3>Manage Products</h3>
+                    <div id="admin-products-list" class="admin-products-list"></div>
+                </div>
+
+                <!-- Add Product Tab -->
+                <div id="addproduct-tab" class="admin-tab-content">
+                    <h3>Add New Product</h3>
+                    <form id="add-product-form" onsubmit="addProduct(event)">
+                        <div class="form-group">
+                            <label>Product Name:</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category:</label>
+                            <select id="product-category" required>
+                                <option value="vanilla">Vanilla</option>
+                                <option value="chocolate">Chocolate</option>
+                                <option value="strawberry">Strawberry</option>
+                                <option value="special">Special</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price ($):</label>
+                            <input type="number" id="product-price" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock:</label>
+                            <input type="number" id="product-stock" value="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description:</label>
+                            <textarea id="product-description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Tags (comma-separated):</label>
+                            <input type="text" id="product-tags" placeholder="featured, bestseller, new-arrival">
+                        </div>
+                        <div class="form-group">
+                            <label>Product Images:</label>
+                            <input type="file" id="product-images" multiple accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </form>
+                </div>
+
+                <!-- Orders Tab -->
+                <div id="orders-tab" class="admin-tab-content">
+                    <h3>Customer Orders</h3>
+                    <div id="admin-orders-list" class="admin-orders-list"></div>
+                </div>
+
+                <!-- Chat Tab -->
+                <div id="chat-tab" class="admin-tab-content">
+                    <h3>Customer Support Chat</h3>
+                    <div id="admin-chat-list"></div>
+                </div>
+
+                <!-- Coupons Tab -->
+                <div id="coupons-tab" class="admin-tab-content">
+                    <h3>Manage Coupons</h3>
+                    <form onsubmit="createCoupon(event)">
+                        <div class="form-group">
+                            <label>Coupon Code:</label>
+                            <input type="text" id="coupon-code-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount (%):</label>
+                            <input type="number" id="coupon-discount" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Uses:</label>
+                            <input type="number" id="coupon-maxuses" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Coupon</button>
+                    </form>
+                    <div id="admin-coupons-list" style="margin-top: 2rem;"></div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div id="reports-tab" class="admin-tab-content">
+                    <h3>Reports & Analytics</h3>
+                    <div class="reports-section">
+                        <h4>Daily Orders</h4>
+                        <canvas id="daily-orders-chart"></canvas>
+                        <h4>Revenue Trend</h4>
+                        <canvas id="revenue-chart"></canvas>
+                        <h4>Top Selling Products</h4>
+                        <div id="top-sellers"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget (Bottom Right) -->
+    <div id="chat-widget" class="chat-widget">
+        <div class="chat-header" onclick="toggleChat()">
+            💬 Live Chat
+            <span class="chat-toggle">▼</span>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div id="chat-messages"></div>
+            <div class="chat-input">
+                <input type="text" id="chat-message-input" placeholder="Type a message...">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 ICShop. All rights reserved. | Premium Ice Cream Since 2024</p>
+            <p>📱 Phone: +923286324052 | 📧 Email: gullsafs@gmail.com | 📍 Address: Ghazi or DHA road PCHS 1-F2</p>
+        </div>
+    </footer>
+
+    <script src="app-updated.js"></script>
+</body>
+</html>
